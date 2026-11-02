@@ -26,7 +26,65 @@ const water=new THREE.Mesh(new THREE.PlaneGeometry(500,500),new THREE.MeshStanda
 const ring=new THREE.Mesh(new THREE.TorusGeometry(104,.8,10,180),mat(0xf0d17b));ring.rotation.x=Math.PI/2;ring.position.y=-.35;scene.add(ring);
 const colors=[{name:'ВИХРЬ',color:0x2389e8,accent:0x123f9b,speed:11,hp:110,desc:'Быстрый боец · высокая скорость'},{name:'ТИТАН',color:0x9a62d8,accent:0x4d247e,speed:8,hp:170,desc:'Тяжёлый боец · много здоровья'},{name:'ИСКРА',color:0xe84c48,accent:0x8e2020,speed:10,hp:100,desc:'Сбалансированный боец · быстрые атаки'},{name:'ЛИСТОК',color:0x42b96b,accent:0x176b3b,speed:9.5,hp:125,desc:'Универсал · уверенный полёт'}];let selected=0;
 const roster=document.querySelector('#roster');function renderRoster(){roster.innerHTML='';colors.forEach((c,i)=>{const b=document.createElement('button');b.className='fighterPick'+(i===selected?' selected':'');b.innerHTML='<div class="portrait" style="background:linear-gradient('+new THREE.Color(c.color).getStyle()+',#f6c89e)"></div>'+c.name;b.onclick=()=>{selected=i;renderRoster();document.querySelector('#bio').textContent=c.desc};roster.appendChild(b)});document.querySelector('#bio').textContent=colors[selected].desc}renderRoster();
-function makeFighter(color,accent){const g=new THREE.Group();const skin=mat(0xffc995),cloth=mat(color,.55),trim=mat(accent,.42,.12),dark=mat(0x202b3c);const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.56,.72,7,14),cloth);torso.position.y=1.35;torso.castShadow=true;g.add(torso);const head=new THREE.Mesh(new THREE.SphereGeometry(.43,24,18),skin);head.position.y=2.38;head.castShadow=true;g.add(head);const hair=new THREE.Mesh(new THREE.SphereGeometry(.46,24,12,0,Math.PI*2,0,Math.PI*.55),trim);hair.position.y=2.52;hair.castShadow=true;g.add(hair);const eyes=[];for(const s of [-1,1]){const eye=new THREE.Mesh(new THREE.SphereGeometry(.065,12,10),dark);eye.position.set(s*.16,2.4,.38);g.add(eye);eyes.push(eye)}const arms=[],legs=[];for(const s of [-1,1]){const arm=new THREE.Group();arm.position.set(s*.57,1.7,0);const upper=new THREE.Mesh(new THREE.CapsuleGeometry(.17,.48,5,10),cloth);upper.position.y=-.28;upper.rotation.z=s*.12;upper.castShadow=true;arm.add(upper);const glove=new THREE.Mesh(new THREE.SphereGeometry(.2,14,12),trim);glove.position.set(s*.03,-.61,.05);arm.add(glove);g.add(arm);arms.push(arm);const leg=new THREE.Group();leg.position.set(s*.25,.75,0);const boot=new THREE.Mesh(new THREE.CapsuleGeometry(.19,.52,5,10),dark);boot.position.y=-.28;boot.castShadow=true;leg.add(boot);g.add(leg);legs.push(leg)}const belt=new THREE.Mesh(new THREE.TorusGeometry(.43,.08,8,24),trim);belt.rotation.x=Math.PI/2;belt.position.y=1.02;g.add(belt);const shadow=new THREE.Mesh(new THREE.CircleGeometry(.72,24),new THREE.MeshBasicMaterial({color:0x14241b,transparent:true,opacity:.25}));shadow.rotation.x=-Math.PI/2;shadow.position.y=.025;g.add(shadow);const aura=new THREE.Mesh(new THREE.TorusGeometry(.8,.035,8,40),new THREE.MeshBasicMaterial({color:color,transparent:true,opacity:.55}));aura.rotation.x=Math.PI/2;aura.position.y=.06;g.add(aura);scene.add(g);return {g,arms,legs,torso,head,aura,baseY:0,phase:Math.random()*6}}
+function makeFighter(color,accent){
+ const g=new THREE.Group(),skin=mat(0xe9b895,.72),cloth=mat(color,.48),trim=mat(accent,.36,.28),dark=mat(0x182333,.62),metal=mat(0xb9c9d6,.25,.82),gold=mat(0xffc34d,.28,.72),white=mat(0xf5f3e9,.3),iris=mat(0x35b8d9,.25,.25);
+ const mesh=(geo,ma,parent,x=0,y=0,z=0)=>{const o=new THREE.Mesh(geo,ma);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o};
+ const torso=new THREE.Group();torso.position.y=1.34;g.add(torso);
+ // layered chest, abdomen and shoulder armor
+ mesh(new THREE.CapsuleGeometry(.48,.62,8,18),cloth,torso,0,.12,0);
+ mesh(new THREE.SphereGeometry(.51,24,16),trim,torso,0,.38,-.02).scale.set(1,.72,.65);
+ mesh(new THREE.BoxGeometry(.58,.43,.16),cloth,torso,0,.18,.37);
+ for(let j=0;j<3;j++)mesh(new THREE.BoxGeometry(.42-j*.035,.11,.17),trim,torso,0,-.02-j*.14,.4);
+ const collar=mesh(new THREE.TorusGeometry(.25,.075,10,24),gold,torso,0,.68,0);collar.rotation.x=Math.PI/2;
+ const belt=mesh(new THREE.CylinderGeometry(.48,.48,.13,24),dark,torso,0,-.38,0);
+ mesh(new THREE.BoxGeometry(.2,.19,.08),gold,torso,0,-.38,.47);
+ // neck and expressive face
+ mesh(new THREE.CylinderGeometry(.17,.2,.25,16),skin,g,0,2.05,0);
+ const head=new THREE.Group();head.position.set(0,2.42,.02);g.add(head);
+ mesh(new THREE.SphereGeometry(.39,32,24),skin,head);
+ for(const side of [-1,1]){
+  mesh(new THREE.SphereGeometry(.09,14,12),skin,head,side*.385,-.02,0);
+  mesh(new THREE.SphereGeometry(.105,18,14),white,head,side*.145,.015,.32);
+  mesh(new THREE.SphereGeometry(.052,14,12),iris,head,side*.145,.01,.405);
+  mesh(new THREE.SphereGeometry(.025,10,8),dark,head,side*.145,.01,.45);
+  const brow=mesh(new THREE.BoxGeometry(.17,.045,.055),trim,head,side*.145,.13,.34);brow.rotation.z=side*-.12;
+ }
+ mesh(new THREE.ConeGeometry(.07,.15,10),skin,head,0,-.045,.39).rotation.x=Math.PI/2;
+ const mouth=mesh(new THREE.BoxGeometry(.12,.025,.025),dark,head,0,-.17,.36);
+ // hair crest, side locks and back mane
+ mesh(new THREE.SphereGeometry(.405,24,16,0,Math.PI*2,0,Math.PI*.53),trim,head,0,.18,-.035);
+ for(let i=0;i<5;i++){const lock=mesh(new THREE.ConeGeometry(.13,.52,9),trim,head,(i-2)*.14,.32,-.04);lock.rotation.z=(i-2)*-.28;lock.rotation.x=-.25}
+ const arms=[],legs=[];
+ for(const side of [-1,1]){
+  const arm=new THREE.Group();arm.position.set(side*.57,1.84,0);g.add(arm);
+  mesh(new THREE.SphereGeometry(.25,18,14),trim,arm,side*.02,-.02,0).scale.set(1,.8,1);
+  mesh(new THREE.CapsuleGeometry(.17,.42,7,12),cloth,arm,0,-.34,0);
+  const elbow=mesh(new THREE.SphereGeometry(.17,14,12),metal,arm,0,-.62,.015);
+  mesh(new THREE.CapsuleGeometry(.145,.37,7,12),trim,arm,0,-.85,.015);
+  const glove=mesh(new THREE.SphereGeometry(.19,16,12),dark,arm,0,-1.12,.06);
+  for(let k=0;k<3;k++)mesh(new THREE.BoxGeometry(.065,.16,.09),metal,arm,(k-1)*.09,-1.25,.1);
+  arms.push(arm);
+  const leg=new THREE.Group();leg.position.set(side*.24,.82,0);g.add(leg);
+  mesh(new THREE.CapsuleGeometry(.2,.46,7,12),dark,leg,0,-.28,0);
+  mesh(new THREE.BoxGeometry(.37,.17,.4),trim,leg,0,-.53,.02);
+  mesh(new THREE.CapsuleGeometry(.19,.25,6,12),dark,leg,0,-.7,.09);
+  mesh(new THREE.BoxGeometry(.38,.17,.52),metal,leg,0,-.82,.19);
+  legs.push(leg);
+ }
+ // back-mounted shoulder mantle and animated cloth panels
+ const cape=mesh(new THREE.ConeGeometry(.62,1.25,5),dark,g,0,1.28,-.38);cape.rotation.x=-.18;
+ const shoulderL=mesh(new THREE.SphereGeometry(.3,16,12),gold,g,-.57,1.88,0);shoulderL.scale.set(1,.62,1);
+ const shoulderR=mesh(new THREE.SphereGeometry(.3,16,12),gold,g,.57,1.88,0);shoulderR.scale.set(1,.62,1);
+ // weapon, hand-held and visible silhouette
+ const weapon=new THREE.Group();weapon.position.set(.78,1.0,.18);g.add(weapon);
+ mesh(new THREE.CylinderGeometry(.045,.055,.95,10),dark,weapon,0,-.1,0);
+ mesh(new THREE.TorusGeometry(.12,.035,8,16),gold,weapon,0,.32,0);
+ const blade=mesh(new THREE.ConeGeometry(.17,.65,6),metal,weapon,0,.68,0);blade.rotation.x=Math.PI;
+ const pommel=mesh(new THREE.SphereGeometry(.11,12,10),gold,weapon,0,-.62,0);
+ const aura=mesh(new THREE.TorusGeometry(.82,.027,8,48),new THREE.MeshBasicMaterial({color,transparent:true,opacity:.4}),g,0,.05,0);aura.rotation.x=Math.PI/2;
+ const shadow=mesh(new THREE.CircleGeometry(.68,32),new THREE.MeshBasicMaterial({color:0x14241b,transparent:true,opacity:.28,depthWrite:false}),g,0,.018,0);shadow.rotation.x=-Math.PI/2;shadow.castShadow=false;
+ scene.add(g);return {g,arms,legs,torso,head,aura,cape,weapon,baseY:0,phase:Math.random()*6};
+}
 function defeatCutscene(){
  const g=new THREE.Group(),skin=mat(0xffd0b4),hair=mat(0x34234d),outfit=mat(0x8749c9),gold=mat(0xffd36a);
  const add=(geo,ma,parent,x,y,z)=>{const m=new THREE.Mesh(geo,ma);m.position.set(x,y,z);m.castShadow=true;parent.add(m);return m};

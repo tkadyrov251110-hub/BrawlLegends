@@ -108,6 +108,28 @@ function tree(x,z,s=1){const t=new THREE.Group();const trunk=new THREE.Mesh(new 
 function obstacle(x,z,sx,sz){const g=new THREE.Group();const b=new THREE.Mesh(new THREE.BoxGeometry(sx,1.6,sz),mat(0x966b42));b.position.y=.8;b.castShadow=true;b.receiveShadow=true;g.add(b);const top=new THREE.Mesh(new THREE.BoxGeometry(sx+.15,.2,sz+.15),mat(0xd6b477));top.position.y=1.65;g.add(top);g.position.set(x,0,z);scene.add(g)}
 for(let i=0;i<110;i++){const a=i*2.399,r=24+(i%11)*7.1;tree(Math.cos(a)*r,Math.sin(a)*r,.7+(i%4)*.16)}
 for(let i=0;i<30;i++){const a=i*2.4,r=10+(i%5)*13;obstacle(Math.cos(a)*r,Math.sin(a)*r,1.5+(i%3),1.3+(i%2))}
+// small coastal settlement: detailed cabins, street lamps, fences and parked vehicles
+function cabin(x,z,rot=0){
+ const q=new THREE.Group(),wood=mat(0x795039),plaster=mat(0xd6c29b),roof=mat(0x343d4b),glass=mat(0x68b9d2,.2,.35),door=mat(0x493023);
+ const box=(w,h,d,m,X,Y,Z)=>{const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(X,Y,Z);o.castShadow=true;o.receiveShadow=true;q.add(o);return o};
+ box(7,3.3,5,plaster,0,1.65,0);box(7.5,.22,5.5,wood,0,3.32,0);
+ const roof1=box(4.4,.22,5.9,roof,-1.1,4.05,0),roof2=box(4.4,.22,5.9,roof,1.1,4.05,0);roof1.rotation.z=-.48;roof2.rotation.z=.48;
+ box(1.15,2.25,.12,door,0,1.12,2.57);
+ for(const X of [-2.2,2.2]){box(1.15,1.1,.14,wood,X,2.05,2.58);box(.92,.86,.06,glass,X,2.05,2.67);box(.1,1.1,.08,wood,X,2.05,2.73);box(1.15,.1,.08,wood,X,2.05,2.73)}
+ q.position.set(x,0,z);q.rotation.y=rot;scene.add(q);
+}
+cabin(-32,-26,.35);cabin(35,28,-.8);cabin(-42,35,.2);
+function lamp(x,z){const m=mat(0x303c4a,.3,.65),glow=new THREE.MeshStandardMaterial({color:0xffe6a1,emissive:0xffb84a,emissiveIntensity:2});const g=new THREE.Group();const pole=new THREE.Mesh(new THREE.CylinderGeometry(.09,.13,4.5,10),m);pole.position.y=2.25;g.add(pole);const arm=new THREE.Mesh(new THREE.BoxGeometry(.85,.09,.09),m);arm.position.set(.36,4.35,0);g.add(arm);const bulb=new THREE.Mesh(new THREE.SphereGeometry(.19,12,10),glow);bulb.position.set(.72,4.25,0);g.add(bulb);g.position.set(x,0,z);scene.add(g)}
+for(const p of [[-25,-17],[25,-18],[-26,18],[25,18]])lamp(p[0],p[1]);
+function vehicle(x,z,rot=0){
+ const g=new THREE.Group(),body=mat(0x263e56,.34,.48),trim=mat(0x121b26,.45,.3),glass=mat(0x6da5b9,.18,.4),rubber=mat(0x111318,.9),rim=mat(0xc7d0d6,.25,.8);
+ const box=(w,h,d,m,X,Y,Z)=>{const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(X,Y,Z);o.castShadow=true;o.receiveShadow=true;g.add(o);return o};
+ box(4.2,.8,2.05,body,0,1.05,0);box(2.35,1.05,1.82,body,-.15,1.85,0);box(2.12,.78,1.86,glass,-.15,1.9,0);
+ for(const X of [-1.35,1.35])for(const Z of [-1.08,1.08]){const w=new THREE.Mesh(new THREE.CylinderGeometry(.43,.43,.22,20),rubber);w.rotation.x=Math.PI/2;w.position.set(X,.58,Z);g.add(w);const r=new THREE.Mesh(new THREE.CylinderGeometry(.22,.22,.23,16),rim);r.rotation.x=Math.PI/2;r.position.copy(w.position);g.add(r)}
+ box(.22,.25,.12,mat(0xffe9ad),2.08,1.1,.72);box(.22,.25,.12,mat(0xffe9ad),2.08,1.1,-.72);
+ g.position.set(x,0,z);g.rotation.y=rot;scene.add(g)
+}
+vehicle(5,-37,.6);vehicle(48,-8,-1.2);
 for(let i=0;i<14;i++){const x=(i%7-3)*19,z=(Math.floor(i/7)-.5)*70;const rock=new THREE.Mesh(new THREE.DodecahedronGeometry(1.4+(i%3)*.4,1),mat(0x87949a));rock.position.set(x,.2,z);rock.castShadow=true;scene.add(rock)}
 // scenic floating islands and clouds
 for(let i=0;i<18;i++){const cloud=new THREE.Group();for(let j=0;j<5;j++){const p=new THREE.Mesh(new THREE.SphereGeometry(2.1+(j%2),16,12),new THREE.MeshStandardMaterial({color:0xffffff,transparent:true,opacity:.72,roughness:1}));p.position.set((j-2)*1.7,Math.sin(j)*.45,Math.cos(j*2)*.7);cloud.add(p)}cloud.position.set(Math.sin(i*8)*115,28+(i%4)*8,Math.cos(i*5)*115);scene.add(cloud)}
@@ -120,7 +142,7 @@ function slash(){if(!running||attackCd>0)return;attackCd=.48;player.arms[0].rota
 function toggleFlight(){if(!running)return;flying=!flying;document.querySelector('#fly').innerHTML=flying?'⬇<br>СЕСТЬ':'✈<br>ПОЛЁТ';if(flying)burst(player.g.position.clone().add(new THREE.Vector3(0,1,0)),0x75e5ff,12)}
 function end(){running=false;if(hp<=0){defeatCutscene();return}overlay.style.display='grid';document.querySelector('#panel').innerHTML='<h1>БОЙ ОКОНЧЕН</h1><p>Твой счёт: <b>'+score+'</b></p><button class="start" id="again">ЕЩЁ РАЗ</button>';document.querySelector('#again').onclick=()=>{document.querySelector('#panel').innerHTML='<h1>BRAWL LEGENDS</h1><p>Выбери бойца и отправляйся исследовать огромный остров!</p><div class="roster" id="roster"></div><p id="bio" class="small"></p><button class="start" id="start">НАЧАТЬ БОЙ</button>';renderRoster();document.querySelector('#start').onclick=reset}}
 function loop(now){if(!running)return;const dt=Math.min((now-last)/1000,.04);last=now;time-=dt;attackCd=Math.max(0,attackCd-dt);if(attackCd===0){player.arms.forEach(a=>{a.rotation.x=THREE.MathUtils.lerp(a.rotation.x,0,.24)})}if(time<=0||hp<=0){end();return}
-let dx=(keys.d||keys.ArrowRight?1:0)-(keys.a||keys.ArrowLeft?1:0)+joy.x,dz=(keys.s||keys.ArrowDown?1:0)-(keys.w||keys.ArrowUp?1:0)+joy.y;const moving=Math.hypot(dx,dz)>.08,len=Math.hypot(dx,dz)||1;player.phase+=dt*(moving?13:3);const speed=colors[selected].speed*(flying?1.5:1);if(moving){player.g.position.x+=dx/len*speed*dt;player.g.position.z+=dz/len*speed*dt;player.g.rotation.y=Math.atan2(dx,dz);player.legs[0].rotation.x=Math.sin(player.phase)*.65;player.legs[1].rotation.x=-Math.sin(player.phase)*.65;player.arms[0].rotation.x=-Math.sin(player.phase)*.35;player.arms[1].rotation.x=Math.sin(player.phase)*.35}else{player.legs.forEach(l=>l.rotation.x=THREE.MathUtils.lerp(l.rotation.x,0,.18));player.g.position.y=flyY+Math.sin(now*.002)*.035}
+let dx=(keys.d||keys.ArrowRight?1:0)-(keys.a||keys.ArrowLeft?1:0)+joy.x,dz=(keys.s||keys.ArrowDown?1:0)-(keys.w||keys.ArrowUp?1:0)+joy.y;const moving=Math.hypot(dx,dz)>.08,len=Math.hypot(dx,dz)||1;player.phase+=dt*(moving?13:3);if(player.cape)player.cape.rotation.z=Math.sin(now*.006)*.13+(moving?-.12:0);if(player.weapon)player.weapon.rotation.x=moving?Math.sin(player.phase)*.08:0;player.head.rotation.y=moving?Math.sin(now*.002)*.035:0;const speed=colors[selected].speed*(flying?1.5:1);if(moving){player.g.position.x+=dx/len*speed*dt;player.g.position.z+=dz/len*speed*dt;player.g.rotation.y=Math.atan2(dx,dz);player.legs[0].rotation.x=Math.sin(player.phase)*.65;player.legs[1].rotation.x=-Math.sin(player.phase)*.65;player.arms[0].rotation.x=-Math.sin(player.phase)*.35;player.arms[1].rotation.x=Math.sin(player.phase)*.35}else{player.legs.forEach(l=>l.rotation.x=THREE.MathUtils.lerp(l.rotation.x,0,.18));player.g.position.y=flyY+Math.sin(now*.002)*.035}
 if(keys[' ']||attack)slash();if(keys.f&&!flyToggle){toggleFlight();flyToggle=true}if(!keys.f)flyToggle=false;
 if(flying){flyY=THREE.MathUtils.lerp(flyY,5.5,.045);player.g.position.y=flyY+Math.sin(now*.004)*.28;player.g.rotation.z=THREE.MathUtils.lerp(player.g.rotation.z,-dz*.12,.1)}else{flyY=THREE.MathUtils.lerp(flyY,0,.1);player.g.position.y=flyY}
 player.g.position.x=THREE.MathUtils.clamp(player.g.position.x,-clampWorld,clampWorld);player.g.position.z=THREE.MathUtils.clamp(player.g.position.z,-clampWorld,clampWorld);

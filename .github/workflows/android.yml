@@ -1,3 +1,4 @@
+
 name: Build Android APK
 
 on:
@@ -13,16 +14,17 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Export with Godot
-        uses: 
+        uses: firebelley/godot-export@v8.0.0
         with:
           godot_executable_download_url: https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_linux.x86_64.zip
           godot_export_templates_download_url: https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_export_templates.tpz
-          export preset: Android
+          preset: Android
           archive_output: true
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
-        with:uses: firebelley/godot-export@v8.0.0
+        with:
           name: brawl-legends-android
           path: build/*
           if-no-files-found: warn
+          

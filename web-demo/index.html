@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Brawl Legends — Web Demo</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#101827;color:#fff;font:16px system-ui;display:grid;place-items:center;min-height:100vh;overflow:hidden}main{width:min(100vw,900px);padding:12px}header{display:flex;justify-content:space-between;gap:8px;margin-bottom:8px}canvas{display:block;width:100%;aspect-ratio:16/10;background:#263b42;border:3px solid #71858b;border-radius:14px;touch-action:none}button{border:0;border-radius:12px;padding:12px 18px;background:#f4c542;font-weight:800}#controls{display:flex;justify-content:space-between;align-items:center;padding:12px}#stick{width:112px;height:90px;border-radius:50%;background:#ffffff22;position:relative;touch-action:none}#nub{position:absolute;width:42px;height:42px;border-radius:50%;background:#ffffff88;left:35px;top:24px}#hit{width:90px;height:90px;border-radius:50%;background:#e74c3c;color:white;font-size:18px}#overlay{position:fixed;inset:0;background:#07101ddd;display:grid;place-items:center;text-align:center;padding:24px}#panel{max-width:420px}small{color:#cbd5e1}
+</style>
+</head>
+<body><main><header><b>⚔ BRAWL LEGENDS</b><span id="stats">❤️ 100 · ⭐ 0 · 03:00</span></header><canvas id="game" width="900" height="560"></canvas><div id="controls"><div id="stick"><div id="nub"></div></div><button id="hit">УДАР</button></div><small>На ПК: WASD / стрелки — движение, пробел — атака. На телефоне — джойстик и кнопка удара.</small></main>
+<div id="overlay"><div id="panel"><h1>BRAWL LEGENDS</h1><p>Выживи на арене и победи ботов!</p><button id="start">НАЧАТЬ БОЙ</button></div></div>
+<script>
+const c=document.getElementById('game'),x=c.getContext('2d'),stats=document.getElementById('stats'),overlay=document.getElementById('overlay');
+let p,bots,score,hp,time,running=false,keys={},joy={x:0,y:0},attack=false,last=0;
+function reset(){p={x:450,y:280,r:18,hp:100,cd:0};bots=Array.from({length:6},(_,i)=>({x:100+(i%3)*350,y:80+Math.floor(i/3)*400,r:17,hp:2}));score=0;hp=100;time=180;running=true;last=performance.now();overlay.style.display='none';requestAnimationFrame(loop)}
+function circle(a,color){x.beginPath();x.arc(a.x,a.y,a.r,0,Math.PI*2);x.fillStyle=color;x.fill();x.strokeStyle='#101827';x.lineWidth=4;x.stroke()}
+function loop(now){if(!running)return;let dt=Math.min((now-last)/1000,.04);last=now;time-=dt;if(time<=0||hp<=0){running=false;overlay.style.display='grid';document.querySelector('#panel').innerHTML='<h1>Бой окончен</h1><p>Счёт: '+score+'</p><button onclick="reset()">ЕЩЁ РАЗ</button>';return}
+let dx=(keys.d||keys.ArrowRight?1:0)-(keys.a||keys.ArrowLeft?1:0)+joy.x,dy=(keys.s||keys.ArrowDown?1:0)-(keys.w||keys.ArrowUp?1:0)+joy.y;let l=Math.hypot(dx,dy)||1;p.x=Math.max(24,Math.min(876,p.x+dx/l*220*dt));p.y=Math.max(24,Math.min(536,p.y+dy/l*220*dt));p.cd=Math.max(0,p.cd-dt);
+if((keys[' ']||attack)&&p.cd===0){p.cd=.35;for(let b of bots)if(Math.hypot(b.x-p.x,b.y-p.y)<75){b.hp--;if(b.hp<=0){b.dead=true;score+=10}}}
+for(let b of bots){if(b.dead)continue;let a=Math.atan2(p.y-b.y,p.x-b.x);b.x+=Math.cos(a)*75*dt;b.y+=Math.sin(a)*75*dt;if(Math.hypot(b.x-p.x,b.y-p.y)<p.r+b.r){hp-=18*dt}}
+bots=bots.filter(b=>!b.dead);if(!bots.length)bots=Array.from({length:6},()=>({x:Math.random()*820+40,y:Math.random()*460+50,r:17,hp:2}));
+x.clearRect(0,0,900,560);x.fillStyle='#35534b';x.fillRect(0,0,900,560);x.strokeStyle='#ffffff12';for(let i=0;i<900;i+=45){x.beginPath();x.moveTo(i,0);x.lineTo(i,560);x.stroke()}for(let i=0;i<560;i+=45){x.beginPath();x.moveTo(0,i);x.lineTo(900,i);x.stroke()}x.fillStyle='#68836a';for(let i=0;i<18;i++){x.beginPath();x.arc((i*173)%880+10,(i*97)%540+10,8,0,7);x.fill()}bots.forEach(b=>circle(b,'#e64b4b'));circle(p,'#48a8ff');x.fillStyle='#111';x.fillRect(p.x-22,p.y-31,44,6);x.fillStyle='#53e07a';x.fillRect(p.x-22,p.y-31,44*hp/100,6);stats.textContent='❤️ '+Math.max(0,Math.ceil(hp))+' · ⭐ '+score+' · '+String(Math.floor(time/60)).padStart(2,'0')+':'+String(Math.floor(time%60)).padStart(2,'0');requestAnimationFrame(loop)}
+document.getElementById('start').onclick=reset;addEventListener('keydown',e=>keys[e.key]=true);addEventListener('keyup',e=>keys[e.key]=false);
+const stick=document.getElementById('stick'),nub=document.getElementById('nub');function move(e){let r=stick.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;let dx=e.clientX-cx,dy=e.clientY-cy,l=Math.hypot(dx,dy),m=Math.min(30,l),a=Math.atan2(dy,dx);joy={x:Math.cos(a)*m/30,y:Math.sin(a)*m/30};nub.style.left=(35+joy.x*25)+'px';nub.style.top=(24+joy.y*25)+'px'}stick.onpointerdown=e=>{stick.setPointerCapture(e.pointerId);move(e)};stick.onpointermove=e=>{if(e.buttons)move(e)};stick.onpointerup=stick.onpointercancel=()=>{joy={x:0,y:0};nub.style.left='35px';nub.style.top='24px'};const hit=document.getElementById('hit');hit.onpointerdown=()=>attack=true;hit.onpointerup=hit.onpointercancel=()=>attack=false;
+</script></body></html>

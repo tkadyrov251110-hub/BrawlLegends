@@ -1,0 +1,24 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/fighter.gd" id="1"]
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_f"]
+radius = 0.48
+height = 1.35
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape_f"]
+radius = 0.48
+height = 1.35
+
+[node name="Fighter" type="CharacterBody3D"]
+script = ExtResource("1")
+collision_layer = 1
+collision_mask = 1
+
+[node name="Body" type="MeshInstance3D" parent="."]
+position = Vector3(0, 0.7, 0)
+mesh = SubResource("CapsuleMesh_f")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+position = Vector3(0, 0.7, 0)
+shape = SubResource("CapsuleShape_f")
